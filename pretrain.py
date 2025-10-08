@@ -7,7 +7,7 @@
 '''
 import argparse
 import os
-import ruamel_yaml as yaml
+from ruamel.yaml import YAML
 import numpy as np
 import random
 import time
@@ -38,7 +38,7 @@ def train(model, data_loader, optimizer, epoch, device, config):
     metric_logger.add_meter('loss_lm', utils.SmoothedValue(window_size=50, fmt='{value:.4f}'))
     
     header = 'Train Epoch: [{}]'.format(epoch)
-    print_freq = 50   
+    print_freq = 100 # in log cho moi 50 batch
 
     if config['laion_path']:
         data_loader.dataset.reload_laion(epoch)
@@ -46,10 +46,12 @@ def train(model, data_loader, optimizer, epoch, device, config):
     data_loader.sampler.set_epoch(epoch)
 
     for i, (image, caption) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
-        
+        # if i >= 150: #chạy 100 batch
+          #break
+
         if epoch==0:
             warmup_lr_schedule(optimizer, i, config['warmup_steps'], config['warmup_lr'], config['init_lr'])
-            
+
         optimizer.zero_grad()
         
         image = image.to(device,non_blocking=True)
@@ -89,7 +91,7 @@ def main(args, config):
 
     #### Dataset #### 
     print("Creating dataset")
-    datasets = [create_dataset('pretrain', config, min_scale=0.2)]
+    datasets = [create_dataset('pretrain_flickr8k', config, min_scale=0.2)]
     print('number of training samples: %d'%len(datasets[0]))
 
     num_tasks = utils.get_world_size()
@@ -126,6 +128,8 @@ def main(args, config):
     start_time = time.time()    
     for epoch in range(start_epoch, config['max_epoch']):
         
+        print(f"\n===== Epoch {epoch+1}/{config['max_epoch']} =====")
+
         step_lr_schedule(optimizer, epoch, config['init_lr'], config['min_lr'], config['lr_decay_rate'])
                 
         train_stats = train(model, data_loader, optimizer, epoch, device, config) 
@@ -153,21 +157,25 @@ def main(args, config):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', default='./configs/pretrain.yaml')
-    parser.add_argument('--output_dir', default='output/Pretrain')  
+    parser.add_argument('--config', default='./configs/pretrain_flickr8k.yaml')
+    parser.add_argument('--output_dir', default='output/Pretrain_Flickr8k')  
     parser.add_argument('--checkpoint', default='')    
     parser.add_argument('--evaluate', action='store_true')    
     parser.add_argument('--device', default='cuda')
     parser.add_argument('--seed', default=42, type=int)
     parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')    
     parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
-    parser.add_argument('--distributed', default=True, type=bool)
+    parser.add_argument('--distributed', default=False, type=bool)
     args = parser.parse_args()
 
-    config = yaml.load(open(args.config, 'r'), Loader=yaml.Loader)
+    yaml = YAML(typ='rt')
+
+    with open(args.config, 'r') as f:
+        config = yaml.load(f)
 
     Path(args.output_dir).mkdir(parents=True, exist_ok=True)
         
-    yaml.dump(config, open(os.path.join(args.output_dir, 'config.yaml'), 'w'))    
+    with open(os.path.join(args.output_dir, 'config.yaml'), 'w') as f:
+        yaml.dump(config, f)     
     
     main(args, config)

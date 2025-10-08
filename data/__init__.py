@@ -10,6 +10,7 @@ from data.vqa_dataset import vqa_dataset
 from data.nlvr_dataset import nlvr_dataset
 from data.pretrain_dataset import pretrain_dataset
 from transform.randaugment import RandomAugment
+from data.flickr8k_dataset import flickr8k_pretrain
 
 def create_dataset(dataset, config, min_scale=0.5):
     
@@ -56,6 +57,12 @@ def create_dataset(dataset, config, min_scale=0.5):
         test_dataset = flickr30k_retrieval_eval(transform_test, config['image_root'], config['ann_root'], 'test')          
         return train_dataset, val_dataset, test_dataset     
     
+    #flickr8k
+    elif dataset == 'pretrain_flickr8k':
+        dataset = flickr8k_pretrain(config['train_file'], config['image_root'], transform_train)
+        return dataset
+
+
     elif dataset=='vqa': 
         train_dataset = vqa_dataset(transform_train, config['ann_root'], config['vqa_root'], config['vg_root'], 
                                     train_files = config['train_files'], split='train') 

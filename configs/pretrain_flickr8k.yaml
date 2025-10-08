@@ -1,0 +1,19 @@
+train_file: "./flickr8k/captions.txt"
+image_root: "./flickr8k/Images"
+laion_path: ""
+
+batch_size: 4
+image_size: 224
+max_epoch: 10
+init_lr: 1e-4
+min_lr: 1e-6
+warmup_lr: 1e-5
+warmup_steps: 500
+weight_decay: 0.05
+lr_decay_rate: 0.9
+alpha: 0.4
+
+vit: "base"
+vit_grad_ckpt: False
+vit_ckpt_layer: 0
+queue_size: 57600
