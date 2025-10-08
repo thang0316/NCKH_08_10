@@ -1,5 +1,5 @@
-train_file: "/kaggle/input/flickr8k/captions.txt"
-image_root: "/kaggle/input/flickr8k/Images"
+train_file: "/kaggle/working/flickr8k/captions.txt"
+image_root: "/kaggle/working/flickr8k/Images"
 laion_path: ""
 
 batch_size: 4
